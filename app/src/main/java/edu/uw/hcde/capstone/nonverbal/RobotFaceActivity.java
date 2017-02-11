@@ -1,6 +1,7 @@
 package edu.uw.hcde.capstone.nonverbal;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -44,9 +45,15 @@ public class RobotFaceActivity extends Activity {
     private final Random random = new Random();
     private TypedArray videos;
 
+    BluetoothAdapter bluetoothAdapter;
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+
 
         setContentView(R.layout.activity_robot_face);
         videoView = (VideoView) findViewById(R.id.video_view);

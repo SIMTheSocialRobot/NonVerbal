@@ -4,25 +4,54 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
     tools:context="edu.uw.hcde.capstone.nonverbal.MainActivity">
 
-    <TextView
-        android:text="TextView"
+    <!-- Controls -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/bt_device_list_lbl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Bluetooth Control Device"
+            tools:text="bt_device_list_lbl" />
+
+        <Spinner
+            android:id="@+id/bt_device_list"
+            android:layout_width="379dp"
+            android:layout_height="41dp"
+            android:layout_below="@id/bt_device_list_lbl" />
+
+    </LinearLayout>
+
+    <!-- spacer view taking up all excess space -->
+    <View
+        android:id="@+id/spacer"
+        android:layout_width="fill_parent"
+        android:layout_height="10dp"
+        android:layout_weight="1" />
+
+    <!-- Bottom Button -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"
-        android:layout_weight="0.36" />
+        android:layout_alignParentBottom="true">
 
-    <Button
-        android:text="Launch Robot Face"
-        android:layout_width="383dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/button"
-        android:layout_weight="0.03"
-        android:onClick="launchRobotFace"/>
+        <Button
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="75dp"
+            android:onClick="launchRobotFace"
+            android:text="Launch Robot Face" />
+
+    </RelativeLayout>
+
 </LinearLayout>
