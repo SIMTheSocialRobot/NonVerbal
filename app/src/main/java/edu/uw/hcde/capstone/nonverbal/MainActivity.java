@@ -24,10 +24,19 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String BLUETOOTH_CONTROL_DEVICE_ADDRESS = "nonverbal.BTControlDevice";
+    public static final String BLUETOOTH_SERVICE_NAME = "nonverbal";
+    public static final String BLUETOOTH_SERVICE_UUID = "bc8a36fa-761e-4b39-a0e6-376d10d10165";
+
+    final int REQUEST_ENABLE_BT = 1;
+    final int ROBOT_FACE = 2;
+
+    public static final int FAILED_BT_CONNECTION = 2;
+    public static final int BT_CONNECTION_TIMEOUT = 3;
+
     BluetoothAdapter bluetoothAdapter;
     BluetoothDevice bluetoothControlDevice;
 
-    final int REQUEST_ENABLE_BT = 1;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -65,10 +74,11 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT);
             alert.show();
         }
-
-        Intent intent = new Intent(this, RobotFaceActivity.class);
-
-        startActivity(intent);
+        else {
+            Intent intent = new Intent(this, RobotFaceActivity.class);
+            intent.putExtra(BLUETOOTH_CONTROL_DEVICE_ADDRESS, bluetoothControlDevice.getAddress());
+            startActivityForResult(intent, ROBOT_FACE);
+        }
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -79,6 +89,15 @@ public class MainActivity extends AppCompatActivity {
             else {
                 disableControls();
                 showBTORequiredAlert();
+            }
+        }
+        else if (requestCode == ROBOT_FACE) {
+            if (resultCode == BT_CONNECTION_TIMEOUT) {
+                Toast alert = Toast.makeText(
+                        getApplicationContext(),
+                        String.format("Bluetooth connected timed out."),
+                        Toast.LENGTH_LONG);
+                alert.show();
             }
         }
     }

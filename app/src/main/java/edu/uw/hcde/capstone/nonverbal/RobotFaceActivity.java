@@ -2,16 +2,25 @@ package edu.uw.hcde.capstone.nonverbal;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.VideoView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -45,15 +54,23 @@ public class RobotFaceActivity extends Activity {
     private final Random random = new Random();
     private TypedArray videos;
 
-    BluetoothAdapter bluetoothAdapter;
+    BluetoothAdapter btAdapter;
+    BluetoothDevice btControlDevice;
+    BluetoothSocket btSocket;
+    BTConnectThread btConnectThread;
+    BTMessageThread btMessageThread;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        Intent intent = getIntent();
+        btControlDevice = btAdapter.getRemoteDevice(intent.getStringExtra(MainActivity.BLUETOOTH_CONTROL_DEVICE_ADDRESS));
 
+        btConnectThread = new BTConnectThread();
+        btConnectThread.start();
 
         setContentView(R.layout.activity_robot_face);
         videoView = (VideoView) findViewById(R.id.video_view);
@@ -117,4 +134,115 @@ public class RobotFaceActivity extends Activity {
         videoView.setVideoURI(videoToPlay);
         videoView.start();
     }
+
+    private void onBluetoothSocketAvailable(BluetoothSocket socket) {
+        if (socket == null) {
+            setResult(MainActivity.BT_CONNECTION_TIMEOUT);
+            finish();
+        }
+    }
+
+    private class BTConnectThread extends Thread {
+        private static final String TAG = MainActivity.BLUETOOTH_SERVICE_NAME;
+        private static final int BT_TIMEOUT = 15000;
+
+        private final BluetoothServerSocket serverSocket;
+
+        public BTConnectThread() {
+            BluetoothServerSocket tmpServerSocket = null;
+            try {
+                tmpServerSocket = btAdapter.listenUsingInsecureRfcommWithServiceRecord(MainActivity.BLUETOOTH_SERVICE_NAME, UUID.fromString(MainActivity.BLUETOOTH_SERVICE_UUID));
+            }
+            catch (IOException e) {
+                Log.e(TAG, "Failed to listen for connection", e);
+            }
+
+            serverSocket = tmpServerSocket;
+        }
+
+        public void run() {
+            BluetoothSocket socket = null;
+            while (true) {
+                try {
+                    socket = serverSocket.accept(BT_TIMEOUT);
+                    onBluetoothSocketAvailable(socket);
+                }
+                catch (IOException e) {
+                    Log.e(TAG, "Server Socket's accept() method failed", e);
+                    break;
+                }
+                if (socket != null) {
+                    try {
+                        serverSocket.close();
+                        break;
+                    } catch (IOException e) {
+                        Log.e(TAG, "Server Socket's close() method failed", e);
+                        break;
+                    }
+                }
+            }
+
+            if (socket == null) {
+                onBluetoothSocketAvailable(null);
+            }
+        }
+
+        public void cancel() {
+            try {
+                serverSocket.close();
+            }
+            catch (IOException e) {
+                Log.e(TAG, "Could not close the connect socket", e);
+            }
+        }
+    }
+
+    private class BTMessageThread extends Thread {
+        private static final String TAG = MainActivity.BLUETOOTH_SERVICE_NAME;
+
+        private final BluetoothSocket socket;
+        private final InputStream inputStream;
+        private byte[] buffer;
+        private Handler msgHandler;
+
+        public BTMessageThread(BluetoothSocket socket) {
+            this.socket = socket;
+
+            InputStream tmpInputStream = null;
+
+            try {
+                tmpInputStream = socket.getInputStream();
+            } catch (IOException e) {
+                Log.e(TAG, "Error occurred when creating input stream", e);
+            }
+
+            inputStream = tmpInputStream;
+        }
+
+        public void run() {
+            buffer = new byte[8];
+            int numBytes;
+
+            while (true) {
+                try {
+                    numBytes = inputStream.read(buffer);
+                    Log.d(TAG, String.format("Got message: %s", new String(buffer)));
+                    Message msg = msgHandler.obtainMessage(0, numBytes, -1, buffer);
+                    msg.sendToTarget();
+                } catch (IOException e) {
+                    Log.d(TAG, "Input stream was disconnected", e);
+                    break;
+                }
+            }
+        }
+
+        public void cancel() {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Could not close the connect socket", e);
+            }
+        }
+    }
+
 }
