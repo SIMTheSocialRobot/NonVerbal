@@ -1,7 +1,6 @@
 package edu.uw.hcde.capstone.nonverbal;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -9,17 +8,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.MediaController;
 import android.widget.VideoView;
 
-import java.lang.reflect.Field;
 import java.util.Random;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class FullscreenActivity extends Activity {
+public class RobotFaceActivity extends Activity {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -51,7 +48,7 @@ public class FullscreenActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_fullscreen);
+        setContentView(R.layout.activity_robot_face);
         videoView = (VideoView) findViewById(R.id.video_view);
 
         // Hide System UI by default
