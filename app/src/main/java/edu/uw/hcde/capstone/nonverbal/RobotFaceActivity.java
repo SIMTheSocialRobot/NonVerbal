@@ -11,7 +11,6 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -50,7 +49,6 @@ public class RobotFaceActivity extends Activity {
     private Uri nextVideoUri;
     private int counter = 0, threshold = 1;
 
-    private final int DEFAULT_VIDEO_ID = R.raw.emotions01;
     private final Random random = new Random();
     private TypedArray videos;
 
@@ -80,7 +78,7 @@ public class RobotFaceActivity extends Activity {
 
         try {
             videos = getResources().obtainTypedArray(R.array.videos);
-            DEFAULT_VIDEO_URI = getResourceUri(DEFAULT_VIDEO_ID);
+            DEFAULT_VIDEO_URI = chooseRandomIdleExpression();
             videoView.requestFocus();
             playVideo(DEFAULT_VIDEO_URI);
         } catch (Exception e) {
@@ -97,15 +95,8 @@ public class RobotFaceActivity extends Activity {
 
         videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             public void onCompletion(MediaPlayer player) {
-                if (counter > threshold) {
-                    // pick a random one for demo purposes
-                    int id = random.nextInt(videos.length());
-                    nextVideoUri = getResourceUri(videos.getResourceId(id, 0));
-                }
-
                 if (nextVideoUri == null) {
-                    playVideo(DEFAULT_VIDEO_URI);
-                    counter++;
+                    playVideo(chooseRandomIdleExpression());
                 }
                 else {
                     playVideo(nextVideoUri);
@@ -130,6 +121,12 @@ public class RobotFaceActivity extends Activity {
         return Uri.parse("android.resource://" + getPackageName() + "/" + id);
     }
 
+    private Uri chooseRandomIdleExpression() {
+        // Assumes the first X are the idle expressions
+        int id = random.nextInt(4);
+        return getResourceUri(videos.getResourceId(id, 0));
+    }
+
     private void playVideo(Uri videoToPlay) {
         videoView.setVideoURI(videoToPlay);
         videoView.start();
@@ -139,6 +136,10 @@ public class RobotFaceActivity extends Activity {
         if (socket == null) {
             setResult(MainActivity.BT_CONNECTION_TIMEOUT);
             finish();
+        }
+        else {
+            btMessageThread = new BTMessageThread(socket);
+            btMessageThread.start();
         }
     }
 
@@ -197,6 +198,15 @@ public class RobotFaceActivity extends Activity {
         }
     }
 
+    public void setNextVideoFromMessage(String message) {
+        for (int i = 0; i < videos.length(); i++) {
+            String item = videos.getString(i);
+            if (item.toLowerCase().contains(message.toLowerCase())) {
+                nextVideoUri = getResourceUri(videos.getResourceId(i, 0));
+            }
+        }
+    }
+
     private class BTMessageThread extends Thread {
         private static final String TAG = MainActivity.BLUETOOTH_SERVICE_NAME;
 
@@ -220,20 +230,24 @@ public class RobotFaceActivity extends Activity {
         }
 
         public void run() {
-            buffer = new byte[8];
+            buffer = new byte[1024];
             int numBytes;
 
             while (true) {
                 try {
                     numBytes = inputStream.read(buffer);
-                    Log.d(TAG, String.format("Got message: %s", new String(buffer)));
-                    Message msg = msgHandler.obtainMessage(0, numBytes, -1, buffer);
-                    msg.sendToTarget();
+                    Log.d(TAG, String.format("Got message: %s", new String(buffer).substring(0, numBytes)));
+                    processMessage(new String(buffer, 0, numBytes));
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
                     break;
                 }
             }
+        }
+
+        protected void processMessage(String message) {
+            Log.i(TAG, message);
+            setNextVideoFromMessage(message);
         }
 
         public void cancel() {

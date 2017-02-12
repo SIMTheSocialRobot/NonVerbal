@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="videos">
-        <item>@raw/emotions01</item>
-        <item>@raw/emotions02</item>
-        <item>@raw/eyerigtest</item>
-        <item>@raw/lookaround01</item>
-        <item>@raw/lookaround02</item>
-        <item>@raw/suspicious</item>
+        <item>@raw/idled01</item>
+        <item>@raw/idles01</item>
+        <item>@raw/idles02</item>
+        <item>@raw/idles03</item>
+        <item>@raw/thinks01</item>
     </array>
 </resources>
