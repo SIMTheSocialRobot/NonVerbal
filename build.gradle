@@ -1,0 +1,17 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.6
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.slf4j:slf4j-simple:1.7.21'
+    compile 'com.rabbitmq:amqp-client:4.0.2'
+    compile files(
+    	'lib/bluecove-2.1.1.jar'
+    )
+}
