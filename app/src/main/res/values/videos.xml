@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <array name="videos">
-        <item>@raw/idled01</item>
-        <item>@raw/idles01</item>
-        <item>@raw/idles02</item>
-        <item>@raw/idles03</item>
-        <item>@raw/thinks01</item>
+    <array name="vidoes_dumbot">
+        <item>@raw/idle_d01</item>
+        <item>@raw/blink_d01</item>
+    </array>
+    <array name="videos_sim">
+        <item>@raw/idle_s01</item>
+        <item>@raw/idle_s02</item>
+        <item>@raw/idle_s03</item>
+        <item>@raw/think_s01</item>
+        <item>@raw/yes_s01</item>
+        <item>@raw/no_s01</item>
     </array>
 </resources>

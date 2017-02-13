@@ -2,7 +2,6 @@ package edu.uw.hcde.capstone.nonverbal;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,21 +9,13 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
+import android.widget.RadioButton;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String BLUETOOTH_CONTROL_DEVICE_ADDRESS = "nonverbal.BTControlDevice";
+    public static final String ROBOT_MODE = "nonverbal.robotFaceMode";
     public static final String BLUETOOTH_SERVICE_NAME = "nonverbal";
     public static final String BLUETOOTH_SERVICE_UUID = "bc8a36fa-761e-4b39-a0e6-376d10d10165";
 
@@ -35,13 +26,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int BT_CONNECTION_TIMEOUT = 3;
 
     BluetoothAdapter bluetoothAdapter;
-    BluetoothDevice bluetoothControlDevice;
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+    RobotMode robotMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +41,6 @@ public class MainActivity extends AppCompatActivity {
         if (!bluetoothAdapter.isEnabled()) {
             Intent enableBluetoothIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BT);
-        } else {
-            fetchBluetoothDevices();
         }
     }
 
@@ -67,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void launchRobotFace(View view) {
-        if (bluetoothControlDevice == null) {
+        if (false) {
             Toast alert = Toast.makeText(
                     getApplicationContext(),
                     String.format("Select a Control Device first."),
@@ -76,26 +59,40 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             Intent intent = new Intent(this, RobotFaceActivity.class);
-            intent.putExtra(BLUETOOTH_CONTROL_DEVICE_ADDRESS, bluetoothControlDevice.getAddress());
+            intent.putExtra(ROBOT_MODE, robotMode.toString());
             startActivityForResult(intent, ROBOT_FACE);
+        }
+    }
+
+    public void changeRobotMode(View view) {
+        boolean checked = ((RadioButton) view).isChecked();
+
+        switch(view.getId()) {
+            case R.id.robot_mode_sim:
+                if (checked)
+                    robotMode = RobotMode.SIM;
+                    break;
+            case R.id.robot_mode_dumb:
+                if (checked)
+                    robotMode = RobotMode.DUMBOT;
+                    break;
+            default:
+                robotMode = RobotMode.SIM;
         }
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
-                fetchBluetoothDevices();
-            }
-            else {
                 disableControls();
-                showBTORequiredAlert();
+                showBTRequiredAlert();
             }
         }
         else if (requestCode == ROBOT_FACE) {
             if (resultCode == BT_CONNECTION_TIMEOUT) {
                 Toast alert = Toast.makeText(
                         getApplicationContext(),
-                        String.format("Bluetooth connected timed out."),
+                        String.format("Bluetooth connection timed out."),
                         Toast.LENGTH_LONG);
                 alert.show();
             }
@@ -103,46 +100,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void disableControls() {
-        ((Spinner) findViewById(R.id.bt_device_list)).setEnabled(false);
+        ((RadioButton) findViewById(R.id.robot_mode_sim)).setEnabled(false);
+        ((RadioButton) findViewById(R.id.robot_mode_dumb)).setEnabled(false);
         ((Button) findViewById(R.id.button)).setEnabled(false);
     }
 
     private void enableControls() {
-        ((Spinner) findViewById(R.id.bt_device_list)).setEnabled(true);
+        ((RadioButton) findViewById(R.id.robot_mode_sim)).setEnabled(true);
+        ((RadioButton) findViewById(R.id.robot_mode_dumb)).setEnabled(true);
         ((Button) findViewById(R.id.button)).setEnabled(true);
     }
 
-    private void fetchBluetoothDevices() {
-        Spinner ctrl = (Spinner) findViewById(R.id.bt_device_list);
-        final Set<BluetoothDevice> deviceSet = bluetoothAdapter.getBondedDevices();
-        final List<String> deviceNames = new ArrayList<String>();
-        final BluetoothDevice[] devices = deviceSet.toArray(new BluetoothDevice[deviceSet.size()]);
-
-        for (BluetoothDevice device : devices) {
-            deviceNames.add(device.getName());
-        }
-
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, deviceNames.toArray(new String[deviceNames.size()]));
-        ctrl.setAdapter(adapter);
-        ctrl.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                bluetoothControlDevice = devices[position];
-                Toast alert = Toast.makeText(getApplicationContext(), String.format("Control Device set to %s", bluetoothControlDevice.getName()), Toast.LENGTH_SHORT);
-                alert.show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                bluetoothControlDevice = null;
-                Toast alert = Toast.makeText(getApplicationContext(), String.format("Control Device cleared"), Toast.LENGTH_SHORT);
-                alert.show();
-            }
-        });
-    }
-
-    private void showBTORequiredAlert() {
+    private void showBTRequiredAlert() {
         Toast alert = Toast.makeText(
                 getApplicationContext(),
                 String.format("Bluetooth is required."),
@@ -160,15 +129,14 @@ public class MainActivity extends AppCompatActivity {
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
                         disableControls();
-                        showBTORequiredAlert();
+                        showBTRequiredAlert();
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         disableControls();
-                        showBTORequiredAlert();
+                        showBTRequiredAlert();
                         break;
                     case BluetoothAdapter.STATE_ON:
                         enableControls();
-                        fetchBluetoothDevices();
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
                         enableControls();

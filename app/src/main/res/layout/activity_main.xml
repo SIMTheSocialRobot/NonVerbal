@@ -18,17 +18,35 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/bt_device_list_lbl"
+            android:id="@+id/robot_mode_lbl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select Bluetooth Control Device"
-            tools:text="bt_device_list_lbl" />
+            android:text="Select Robot Mode"
+            tools:text="robot_mode_lbl" />
 
-        <Spinner
-            android:id="@+id/bt_device_list"
-            android:layout_width="379dp"
-            android:layout_height="41dp"
-            android:layout_below="@id/bt_device_list_lbl" />
+        <RadioGroup
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:checkedButton="@+id/robot_mode_sim"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:text="SIM"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/robot_mode_sim"
+                android:checked="true"
+                android:onClick="changeRobotMode" />
+
+            <RadioButton
+                android:text="Dumbot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/robot_mode_dumb"
+                android:checked="false"
+                android:onClick="changeRobotMode"/>
+
+        </RadioGroup>
 
     </LinearLayout>
 

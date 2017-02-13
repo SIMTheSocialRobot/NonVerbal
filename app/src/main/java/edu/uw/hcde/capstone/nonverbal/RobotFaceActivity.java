@@ -2,7 +2,6 @@ package edu.uw.hcde.capstone.nonverbal;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,35 +24,16 @@ import java.util.UUID;
  * status bar and navigation/system bar) with user interaction.
  */
 public class RobotFaceActivity extends Activity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 0;
+    VideoView videoView;
+    Uri nextVideoUri;
+    TypedArray videos;
+    RobotMode mode;
 
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
-
-    private VideoView videoView;
-    private Uri DEFAULT_VIDEO_URI;
-    private Uri nextVideoUri;
-    private int counter = 0, threshold = 1;
-
-    private final Random random = new Random();
-    private TypedArray videos;
+    final Random random = new Random();
+    int numIdleExpressions;
 
     BluetoothAdapter btAdapter;
-    BluetoothDevice btControlDevice;
-    BluetoothSocket btSocket;
     BTConnectThread btConnectThread;
     BTMessageThread btMessageThread;
 
@@ -65,7 +44,7 @@ public class RobotFaceActivity extends Activity {
         btAdapter = BluetoothAdapter.getDefaultAdapter();
 
         Intent intent = getIntent();
-        btControlDevice = btAdapter.getRemoteDevice(intent.getStringExtra(MainActivity.BLUETOOTH_CONTROL_DEVICE_ADDRESS));
+        mode = RobotMode.valueOf(intent.getStringExtra(MainActivity.ROBOT_MODE));
 
         btConnectThread = new BTConnectThread();
         btConnectThread.start();
@@ -77,11 +56,19 @@ public class RobotFaceActivity extends Activity {
         videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
         try {
-            videos = getResources().obtainTypedArray(R.array.videos);
-            DEFAULT_VIDEO_URI = chooseRandomIdleExpression();
+            if (mode == RobotMode.DUMBOT) {
+                videos = getResources().obtainTypedArray(R.array.vidoes_dumbot);
+                numIdleExpressions = 1;
+            }
+            else {
+                videos = getResources().obtainTypedArray(R.array.videos_sim);
+                numIdleExpressions = 3;
+            }
+
             videoView.requestFocus();
-            playVideo(DEFAULT_VIDEO_URI);
-        } catch (Exception e) {
+            playVideo(chooseRandomIdleExpression());
+        }
+        catch (Exception e) {
             Log.e("Video loading", e.getMessage());
             e.printStackTrace();
         }
@@ -99,9 +86,7 @@ public class RobotFaceActivity extends Activity {
                     playVideo(chooseRandomIdleExpression());
                 }
                 else {
-                    playVideo(nextVideoUri);
-                    nextVideoUri = null;
-                    counter = 0;
+                    playNextVideo();
                 }
 
             }
@@ -122,12 +107,20 @@ public class RobotFaceActivity extends Activity {
     }
 
     private Uri chooseRandomIdleExpression() {
-        // Assumes the first X are the idle expressions
-        int id = random.nextInt(4);
-        return getResourceUri(videos.getResourceId(id, 0));
+        int id = random.nextInt(numIdleExpressions);
+        Uri video = getResourceUri(videos.getResourceId(id, 0));
+        return video;
+    }
+
+    private void playNextVideo() {
+        playVideo(nextVideoUri);
+        nextVideoUri = null;
     }
 
     private void playVideo(Uri videoToPlay) {
+        if (videoToPlay == null) {
+            videoToPlay = chooseRandomIdleExpression();
+        }
         videoView.setVideoURI(videoToPlay);
         videoView.start();
     }
@@ -198,13 +191,16 @@ public class RobotFaceActivity extends Activity {
         }
     }
 
-    public void setNextVideoFromMessage(String message) {
+    public Uri setNextVideoFromMessage(String message) {
         for (int i = 0; i < videos.length(); i++) {
             String item = videos.getString(i);
             if (item.toLowerCase().contains(message.toLowerCase())) {
                 nextVideoUri = getResourceUri(videos.getResourceId(i, 0));
+                break;
             }
         }
+
+        return nextVideoUri;
     }
 
     private class BTMessageThread extends Thread {
@@ -213,7 +209,6 @@ public class RobotFaceActivity extends Activity {
         private final BluetoothSocket socket;
         private final InputStream inputStream;
         private byte[] buffer;
-        private Handler msgHandler;
 
         public BTMessageThread(BluetoothSocket socket) {
             this.socket = socket;
@@ -237,17 +232,17 @@ public class RobotFaceActivity extends Activity {
                 try {
                     numBytes = inputStream.read(buffer);
                     Log.d(TAG, String.format("Got message: %s", new String(buffer).substring(0, numBytes)));
-                    processMessage(new String(buffer, 0, numBytes));
-                } catch (IOException e) {
-                    Log.d(TAG, "Input stream was disconnected", e);
+                    setNextVideoFromMessage(new String(buffer, 0, numBytes));
+                }
+                catch (IOException e) {
+                    Log.e(TAG, "Input stream was disconnected", e);
+                    finish();
                     break;
                 }
+                catch (NullPointerException e) {
+                    setNextVideoFromMessage("idle");
+                }
             }
-        }
-
-        protected void processMessage(String message) {
-            Log.i(TAG, message);
-            setNextVideoFromMessage(message);
         }
 
         public void cancel() {
