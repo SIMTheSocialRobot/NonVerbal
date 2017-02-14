@@ -62,7 +62,7 @@ public class RobotFaceActivity extends Activity {
             }
             else {
                 videos = getResources().obtainTypedArray(R.array.videos_sim);
-                numIdleExpressions = 3;
+                numIdleExpressions = 4;
             }
 
             videoView.requestFocus();

@@ -8,6 +8,7 @@
         <item>@raw/idle_s01</item>
         <item>@raw/idle_s02</item>
         <item>@raw/idle_s03</item>
+		<item>@raw/blink_s01</item>
         <item>@raw/think_s01</item>
         <item>@raw/yes_s01</item>
         <item>@raw/no_s01</item>
