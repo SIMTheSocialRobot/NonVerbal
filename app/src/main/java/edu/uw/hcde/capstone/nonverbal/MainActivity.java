@@ -33,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+		robotMode = RobotMode.SIM;
+		changeRobotMode(null);
+
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(bluetoothStateReceiver, filter);
 
@@ -65,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeRobotMode(View view) {
+		if (view == null) {
+			robotMode = RobotMode.SIM;
+			return;
+		}
+
         boolean checked = ((RadioButton) view).isChecked();
 
         switch(view.getId()) {
