@@ -48,6 +48,7 @@ public class NonVerbalMQ {
 			app.openMQConnection();
 			
 			if (app.getPreviousDevices().length == 0) {
+				logger.info(String.format("No previous devices. Searching...."));
 				app.discoverBTDevices();
 			}
 			else {
