@@ -46,17 +46,17 @@ public class BTDiscoveryListener implements DiscoveryListener {
 	
 	@Override
 	public void deviceDiscovered(RemoteDevice btDevice, DeviceClass cod) {
-        String name;
-        LocalDevice self;
-        
-        try {
-            name = btDevice.getFriendlyName(false);
-        }
-        catch (Exception e) {
-            name = btDevice.getBluetoothAddress();
-        }
-        
-        logger.info(String.format("Found device %s (%s)", name, btDevice.getBluetoothAddress()));
+		String name;
+		LocalDevice self;
+
+		try {
+		    name = btDevice.getFriendlyName(false);
+		}
+		catch (Exception e) {
+		    name = btDevice.getBluetoothAddress();
+		}
+
+		logger.info(String.format("Found device %s (%s)", name, btDevice.getBluetoothAddress()));
         
 		try {
 			self = LocalDevice.getLocalDevice();
