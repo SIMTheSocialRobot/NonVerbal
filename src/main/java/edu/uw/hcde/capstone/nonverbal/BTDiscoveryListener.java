@@ -100,6 +100,7 @@ public class BTDiscoveryListener implements DiscoveryListener {
 	@Override
 	public void serviceSearchCompleted(int transID, int respCode) {
 		String reason;
+		boolean quit = true;
 		switch (respCode) {
 			case DiscoveryListener.SERVICE_SEARCH_TERMINATED:
 				reason = "Terminated by application"; break;
@@ -110,12 +111,17 @@ public class BTDiscoveryListener implements DiscoveryListener {
 			case DiscoveryListener.SERVICE_SEARCH_DEVICE_NOT_REACHABLE:
 				reason = "Device not reachable"; break;
 			case DiscoveryListener.SERVICE_SEARCH_COMPLETED:
-				reason = "Complete"; break;
+				reason = "Complete"; quit = false; break;
 			default:
 				reason = "Unknown";
 		}
 		
 		logger.info(String.format("Service search completed: %s.", reason));
+		
+		if (quit) {
+			logger.info("Terminating program");
+			System.exit(respCode);
+		}
 	}
 
 	@Override

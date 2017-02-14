@@ -1,7 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'application'
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.7
+
+mainClassName = "edu.uw.hcde.capstone.nonverbal.NonVerbalMQ"
 
 repositories {
     jcenter()
@@ -12,6 +15,6 @@ dependencies {
     compile 'org.slf4j:slf4j-simple:1.7.21'
     compile 'com.rabbitmq:amqp-client:4.0.2'
     compile files(
-    	'lib/bluecove-2.1.1.jar'
+    	'lib/bluecove-2.1.2.jar'
     )
 }
