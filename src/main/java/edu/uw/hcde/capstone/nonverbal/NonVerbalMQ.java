@@ -48,12 +48,14 @@ public class NonVerbalMQ {
 			app.openMQConnection();
 			
 			if (app.getPreviousDevices().length == 0) {
-				logger.info(String.format("No previous devices. Searching...."));
+				logger.info(String.format("No previous devices. Searching..."));
 				app.discoverBTDevices();
 			}
 			else {
+                logger.info(String.format("Searching previous devices..."));
 				for (RemoteDevice device : app.getPreviousDevices()) {
-					if (device.getBluetoothAddress().equals(properties.getProperty("nonverbal.bt.device"))) {
+                    logger.info(String.format("Checking device %s...", device.getBluetoothAddress()));
+					if (device.getBluetoothAddress().toLowerCase().equals(properties.getProperty("nonverbal.bt.device").toLowerCase())) {
 						app.inquireBTServices(device);
 					}
 				}
