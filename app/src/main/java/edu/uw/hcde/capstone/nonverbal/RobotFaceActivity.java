@@ -28,7 +28,7 @@ public class RobotFaceActivity extends Activity {
     VideoView videoView;
     Uri nextVideoUri;
     TypedArray videos;
-    RobotMode mode;
+    RobotType robotType;
 
     final Random random = new Random();
     int numIdleExpressions;
@@ -44,7 +44,7 @@ public class RobotFaceActivity extends Activity {
         btAdapter = BluetoothAdapter.getDefaultAdapter();
 
         Intent intent = getIntent();
-        mode = RobotMode.valueOf(intent.getStringExtra(MainActivity.ROBOT_MODE));
+        robotType = RobotType.valueOf(intent.getStringExtra(MainActivity.ROBOT_TYPE));
 
         btConnectThread = new BTConnectThread();
         btConnectThread.start();
@@ -56,7 +56,7 @@ public class RobotFaceActivity extends Activity {
         videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
         try {
-            if (mode == RobotMode.DUMBOT) {
+            if (robotType == RobotType.DUMBOT) {
                 videos = getResources().obtainTypedArray(R.array.vidoes_dumbot);
                 numIdleExpressions = 1;
             }

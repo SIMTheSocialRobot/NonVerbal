@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String ROBOT_MODE = "nonverbal.robotFaceMode";
+    public static final String ROBOT_TYPE = "nonverbal.robotFaceType";
     public static final String BLUETOOTH_SERVICE_NAME = "nonverbal";
     public static final String BLUETOOTH_SERVICE_UUID = "bc8a36fa-761e-4b39-a0e6-376d10d10165";
 
@@ -26,14 +26,14 @@ public class MainActivity extends AppCompatActivity {
     public static final int BT_CONNECTION_TIMEOUT = 3;
 
     BluetoothAdapter bluetoothAdapter;
-    RobotMode robotMode;
+    RobotType robotType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-		robotMode = RobotMode.SIM;
+		robotType = RobotType.SIM;
 		changeRobotMode(null);
 
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -62,14 +62,14 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             Intent intent = new Intent(this, RobotFaceActivity.class);
-            intent.putExtra(ROBOT_MODE, robotMode.toString());
+            intent.putExtra(ROBOT_TYPE, robotType.toString());
             startActivityForResult(intent, ROBOT_FACE);
         }
     }
 
     public void changeRobotMode(View view) {
 		if (view == null) {
-			robotMode = RobotMode.SIM;
+			robotType = RobotType.SIM;
 			return;
 		}
 
@@ -78,14 +78,14 @@ public class MainActivity extends AppCompatActivity {
         switch(view.getId()) {
             case R.id.robot_mode_sim:
                 if (checked)
-                    robotMode = RobotMode.SIM;
+                    robotType = RobotType.SIM;
                     break;
             case R.id.robot_mode_dumb:
                 if (checked)
-                    robotMode = RobotMode.DUMBOT;
+                    robotType = RobotType.DUMBOT;
                     break;
             default:
-                robotMode = RobotMode.SIM;
+                robotType = RobotType.SIM;
         }
     }
 
