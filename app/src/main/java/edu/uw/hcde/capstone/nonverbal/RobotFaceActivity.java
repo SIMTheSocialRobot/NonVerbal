@@ -88,7 +88,8 @@ public class RobotFaceActivity extends Activity {
                     playVideo(chooseRandomIdleExpression());
                 }
                 else {
-                    playNextVideo();
+                    playVideo(nextVideoUri);
+                    nextVideoUri = null;
                 }
 
             }
@@ -112,11 +113,6 @@ public class RobotFaceActivity extends Activity {
         int id = random.nextInt(numIdleExpressions);
         Uri video = getResourceUri(videos.getResourceId(id, 0));
         return video;
-    }
-
-    private void playNextVideo() {
-        playVideo(nextVideoUri);
-        nextVideoUri = null;
     }
 
     private void playVideo(Uri videoToPlay) {
