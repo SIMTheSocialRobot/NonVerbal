@@ -60,7 +60,7 @@ public class RobotFaceActivity extends Activity {
         try {
             if (robotType == RobotType.DUMBOT) {
                 videos = getResources().obtainTypedArray(R.array.vidoes_dumbot);
-                numIdleExpressions = 1;
+                numIdleExpressions = 2;
             }
             else {
                 videos = getResources().obtainTypedArray(R.array.videos_sim);
