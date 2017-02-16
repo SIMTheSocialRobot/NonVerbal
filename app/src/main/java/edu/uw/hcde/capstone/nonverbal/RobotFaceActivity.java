@@ -85,7 +85,17 @@ public class RobotFaceActivity extends Activity {
         videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             public void onCompletion(MediaPlayer player) {
                 if (nextVideoUri == null) {
-                    playVideo(chooseRandomIdleExpression());
+                    if (robotMode == RobotMode.SLEEP) {
+                        if (robotType == RobotType.SIM) {
+                            playVideo(getResourceUri(R.raw.sleep_s01));
+                        }
+                        else {
+                            playVideo(getResourceUri(R.raw.sleep_d01));
+                        }
+                    }
+                    else {
+                        playVideo(chooseRandomIdleExpression());
+                    }
                 }
                 else {
                     playVideo(nextVideoUri);
