@@ -1,1 +1,2 @@
 include ':face-app'
+include ':mq-bluetooth-bridge'
