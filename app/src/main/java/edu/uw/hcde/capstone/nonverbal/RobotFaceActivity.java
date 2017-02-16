@@ -29,6 +29,7 @@ public class RobotFaceActivity extends Activity {
     Uri nextVideoUri;
     TypedArray videos;
     RobotType robotType;
+    RobotMode robotMode;
 
     final Random random = new Random();
     int numIdleExpressions;
@@ -45,6 +46,7 @@ public class RobotFaceActivity extends Activity {
 
         Intent intent = getIntent();
         robotType = RobotType.valueOf(intent.getStringExtra(MainActivity.ROBOT_TYPE));
+        robotMode = RobotMode.IDLE;
 
         btConnectThread = new BTConnectThread();
         btConnectThread.start();
