@@ -53,11 +53,14 @@ public class NonVerbalMQ {
 			}
 			else {
                 logger.info(String.format("Searching previous devices..."));
+                String[] approvedDevices = properties.getProperty("nonverbal.bt.device").split(",");
 				for (RemoteDevice device : app.getPreviousDevices()) {
                     logger.info(String.format("Checking device %s...", device.getBluetoothAddress()));
-					if (device.getBluetoothAddress().toLowerCase().equals(properties.getProperty("nonverbal.bt.device").toLowerCase())) {
-						app.inquireBTServices(device);
-					}
+                    for (String approvedDevice : approvedDevices) {
+						if (device.getBluetoothAddress().toLowerCase().equals(approvedDevice.toLowerCase())) {
+							app.inquireBTServices(device);
+						}
+                    }
 				}
 			}
 			
@@ -113,8 +116,7 @@ public class NonVerbalMQ {
 	    factory.setHost(properties.getProperty(getHost()));
 	    Connection connection = factory.newConnection();
 	    Channel channel = connection.createChannel();
-	    channel.queueDeclare(getQueue(), false, false, false, null);
-	    
+	    channel.queueDeclare(getQueue(), true, false, false, null);
 	    channel.basicConsume(getQueue(), true, new MessageConsumer(channel, this));
 	}
 	
