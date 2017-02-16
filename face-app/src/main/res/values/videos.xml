@@ -6,29 +6,38 @@
         <item>@raw/blink_d01</item>
 
         <!-- expressions triggered by message -->
-        <item>@raw/sleep_d01</item>
         <item>@raw/no_d01</item>
+        <item>@raw/sleep_d01</item>
         <item>@raw/sleep_d01</item>
         <item>@raw/think_d01</item>
         <item>@raw/wake_d01</item>
     </array>
     <array name="videos_sim">
-        <!-- first 4 are considered "idle" expressions -->
+        <!-- first 5 are considered "idle" expressions -->
         <item>@raw/idle_s01</item>
         <item>@raw/idle_s02</item>
         <item>@raw/idle_s03</item>
-		<item>@raw/blink_s01</item>
+        <item>@raw/idle_s04</item>
+        <item>@raw/blink_s01</item>
 
         <!-- expressions triggered by message -->
+        <item>@raw/happy_s01</item>
+        <item>@raw/happy_s02</item>
+        <item>@raw/no_s01</item>
+        <item>@raw/no_s02</item>
+        <item>@raw/no_s03</item>
+        <item>@raw/sad_s01</item>
+        <item>@raw/sad_s02</item>
+        <item>@raw/shocked_s01</item>
+        <item>@raw/shocked_s02</item>
         <item>@raw/sleep_s01</item>
         <item>@raw/think_s01</item>
         <item>@raw/think_s02</item>
         <item>@raw/think_s03</item>
-        <item>@raw/yes_s01</item>
-        <item>@raw/no_s01</item>
-		<item>@raw/wake_s01</item>
-        <item>@raw/sad_s01</item>
-        <item>@raw/shocked_s01</item>
         <item>@raw/wake_s01</item>
+        <item>@raw/wake_s01</item>
+        <item>@raw/yes_s01</item>
+        <item>@raw/yes_s02</item>
+        <item>@raw/yes_s03</item>
     </array>
 </resources>
