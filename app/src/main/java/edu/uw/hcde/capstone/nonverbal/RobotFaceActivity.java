@@ -138,6 +138,7 @@ public class RobotFaceActivity extends Activity {
             finish();
         }
         else {
+            nextVideoUri = getResourceUri(R.raw.happy_s01);
             btMessageThread = new BTMessageThread(socket);
             btMessageThread.start();
         }
