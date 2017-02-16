@@ -127,6 +127,11 @@ public class RobotFaceActivity extends Activity {
         videoView.start();
     }
 
+    /**
+     * THIS RUNS ON ANOTHER THREAD! CANNOT CHANGE THE VIDEO VIEW DIRECTLY
+     *
+     * @param socket
+     */
     private void onBluetoothSocketAvailable(BluetoothSocket socket) {
         if (socket == null) {
             setResult(MainActivity.BT_CONNECTION_TIMEOUT);
@@ -136,6 +141,38 @@ public class RobotFaceActivity extends Activity {
             btMessageThread = new BTMessageThread(socket);
             btMessageThread.start();
         }
+    }
+
+    /**
+     * THIS RUNS ON ANOTHER THREAD! CANNOT CHANGE THE VIDEO VIEW DIRECTLY
+     *
+     * @param message
+     */
+    private void processMessage(String message) {
+        if (message == null) {
+            return;
+        }
+
+        if (message.contains("sleep")) {
+            robotMode = RobotMode.SLEEP;
+        }
+        else {
+            robotMode = RobotMode.IDLE;
+        }
+
+        setNextVideoFromMessage(message);
+    }
+
+    public Uri setNextVideoFromMessage(String message) {
+        for (int i = 0; i < videos.length(); i++) {
+            String item = videos.getString(i);
+            if (item.toLowerCase().contains(message.toLowerCase())) {
+                nextVideoUri = getResourceUri(videos.getResourceId(i, 0));
+                break;
+            }
+        }
+
+        return nextVideoUri;
     }
 
     private class BTConnectThread extends Thread {
@@ -193,18 +230,6 @@ public class RobotFaceActivity extends Activity {
         }
     }
 
-    public Uri setNextVideoFromMessage(String message) {
-        for (int i = 0; i < videos.length(); i++) {
-            String item = videos.getString(i);
-            if (item.toLowerCase().contains(message.toLowerCase())) {
-                nextVideoUri = getResourceUri(videos.getResourceId(i, 0));
-                break;
-            }
-        }
-
-        return nextVideoUri;
-    }
-
     private class BTMessageThread extends Thread {
         private static final String TAG = MainActivity.BLUETOOTH_SERVICE_NAME;
 
@@ -234,7 +259,7 @@ public class RobotFaceActivity extends Activity {
                 try {
                     numBytes = inputStream.read(buffer);
                     Log.d(TAG, String.format("Got message: %s", new String(buffer).substring(0, numBytes)));
-                    setNextVideoFromMessage(new String(buffer, 0, numBytes));
+                    processMessage(new String(buffer, 0, numBytes));
                 }
                 catch (IOException e) {
                     Log.e(TAG, "Input stream was disconnected", e);
