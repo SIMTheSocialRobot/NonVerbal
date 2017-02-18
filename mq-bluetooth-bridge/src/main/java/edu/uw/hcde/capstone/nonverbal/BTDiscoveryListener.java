@@ -22,6 +22,7 @@ import edu.uw.hcde.capstone.nonverbal.bluetooth.ServiceRecordAttribute;
 public class BTDiscoveryListener implements DiscoveryListener {
 
 	static final Logger logger = LoggerFactory.getLogger(BTDiscoveryListener.class);
+	public static int numSearchThreads;
 	
 	static final UUID[] BT_SERVICES = new UUID[] {
 		new UUID((long) 0x0001), // SDP
@@ -42,6 +43,7 @@ public class BTDiscoveryListener implements DiscoveryListener {
 	public BTDiscoveryListener(NonVerbalMQ app, DiscoveryAgent agent) {
 		this.app = app;
 		this.agent = agent;
+		numSearchThreads++;
 	}
 	
 	@Override
@@ -101,6 +103,7 @@ public class BTDiscoveryListener implements DiscoveryListener {
 	public void serviceSearchCompleted(int transID, int respCode) {
 		String reason;
 		boolean quit = true;
+		numSearchThreads--;
 		switch (respCode) {
 			case DiscoveryListener.SERVICE_SEARCH_TERMINATED:
 				reason = "Terminated by application"; break;
@@ -118,7 +121,7 @@ public class BTDiscoveryListener implements DiscoveryListener {
 		
 		logger.info(String.format("Service search completed: %s.", reason));
 		
-		if (quit) {
+		if (quit && numSearchThreads <= 0) {
 			logger.info("Terminating program");
 			System.exit(respCode);
 		}
