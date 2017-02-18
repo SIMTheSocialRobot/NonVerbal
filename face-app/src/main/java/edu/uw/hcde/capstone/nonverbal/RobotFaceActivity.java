@@ -131,8 +131,8 @@ public class RobotFaceActivity extends Activity {
 
     private int getNumIdleExpressions() {
         return robotType == RobotType.DUMBOT ?
-            getResources().obtainTypedArray(R.array.numIdleExpressions).getIndex(0) :
-            getResources().obtainTypedArray(R.array.numIdleExpressions).getIndex(1);
+            getResources().getIntArray(R.array.numIdleExpressions)[0] :
+            getResources().getIntArray(R.array.numIdleExpressions)[1];
     }
 
     private TypedArray loadVideos() {
