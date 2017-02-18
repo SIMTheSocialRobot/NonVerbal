@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <array name="vidoes_dumbot">
+    <array name="numIdleExpressions">
+        <item>2</item>
+        <item>5</item>
+    </array>
+    <array name="dumbotVideos">
         <!-- idle -->
         <item>@raw/idle_d01</item>
         <item>@raw/blink_d01</item>
@@ -11,8 +15,9 @@
         <item>@raw/sleep_d01</item>
         <item>@raw/think_d01</item>
         <item>@raw/wake_d01</item>
+        <item>@raw/switch_software</item>
     </array>
-    <array name="videos_sim">
+    <array name="simVideos">
         <!-- first 5 are considered "idle" expressions -->
         <item>@raw/idle_s01</item>
         <item>@raw/idle_s02</item>
@@ -40,5 +45,6 @@
         <item>@raw/yes_s01</item>
         <item>@raw/yes_s02</item>
         <item>@raw/yes_s03</item>
+        <item>@raw/switch_software</item>
     </array>
 </resources>

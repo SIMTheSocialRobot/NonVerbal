@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.nfc.tech.NfcBarcode;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -47,6 +48,7 @@ public class RobotFaceActivity extends Activity {
         Intent intent = getIntent();
         robotType = RobotType.valueOf(intent.getStringExtra(MainActivity.ROBOT_TYPE));
         robotMode = RobotMode.IDLE;
+        numIdleExpressions = getNumIdleExpressions();
 
         btConnectThread = new BTConnectThread();
         btConnectThread.start();
@@ -58,14 +60,8 @@ public class RobotFaceActivity extends Activity {
         videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
         try {
-            if (robotType == RobotType.DUMBOT) {
-                videos = getResources().obtainTypedArray(R.array.vidoes_dumbot);
-                numIdleExpressions = 2;
-            }
-            else {
-                videos = getResources().obtainTypedArray(R.array.videos_sim);
-                numIdleExpressions = 5;
-            }
+            videos = loadVideos();
+            numIdleExpressions = getNumIdleExpressions();
 
             videoView.requestFocus();
             playVideo(chooseRandomIdleExpression());
@@ -133,6 +129,18 @@ public class RobotFaceActivity extends Activity {
         videoView.start();
     }
 
+    private int getNumIdleExpressions() {
+        return robotType == RobotType.DUMBOT ?
+            getResources().obtainTypedArray(R.array.numIdleExpressions).getIndex(0) :
+            getResources().obtainTypedArray(R.array.numIdleExpressions).getIndex(1);
+    }
+
+    private TypedArray loadVideos() {
+        return robotType == RobotType.DUMBOT ?
+            getResources().obtainTypedArray(R.array.dumbotVideos) :
+            getResources().obtainTypedArray(R.array.simVideos);
+    }
+
     /**
      * THIS RUNS ON ANOTHER THREAD! CANNOT CHANGE THE VIDEO VIEW DIRECTLY
      *
@@ -167,9 +175,20 @@ public class RobotFaceActivity extends Activity {
             robotMode = RobotMode.IDLE;
         }
 
+        if (message.contains("switch")) {
+            robotType = robotType == RobotType.DUMBOT ? RobotType.SIM : RobotType.DUMBOT;
+            videos = loadVideos();
+            numIdleExpressions = getNumIdleExpressions();
+        }
+
         setNextVideoFromMessage(message);
     }
 
+    /**
+     * THIS RUNS ON ANOTHER THREAD! CANNOT CHANGE THE VIDEO VIEW DIRECTLY
+     *
+     * @param message
+     */
     public Uri setNextVideoFromMessage(String message) {
         for (int i = 0; i < videos.length(); i++) {
             String item = videos.getString(i);
