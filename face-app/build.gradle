@@ -31,4 +31,5 @@ dependencies {
     compile 'com.android.support:support-v4:22.1.1'
     compile 'com.android.support:design:22.2.0'
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+    compile 'com.affectiva.android:affdexsdk:3.2'
 }
