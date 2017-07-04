@@ -39,17 +39,18 @@ public class EmotionListener implements Detector.ImageListener {
             return;
         }
 
-        Log.d(TAG, String.format("[%f] Recieved emotional results", timestamp));
-        Log.d(TAG, String.format("[%f] Found %d faces", timestamp, faces.size()));
+        //Log.d(TAG, String.format("[%f] Recieved emotional results", timestamp));
+        //Log.d(TAG, String.format("[%f] Found %d faces", timestamp, faces.size()));
 
         // TODO: Track different faces?
         // Force the first face for now
         Face face = faces.get(0);
 
         //for (Face face : faces) {
-            Log.i(TAG, String.format("[%f] Face %d appearance: %s ", timestamp, face.getId(), face.appearance));
-            Log.i(TAG, String.format("[%f] Face %d emotion: %s ", timestamp, face.getId(), face.emotions));
-            Log.i(TAG, String.format("[%f] Face %d dominate emote: %s ", timestamp, face.getId(), face.emojis.getDominant()));
+            //Log.i(TAG, String.format("[%f] Face %d appearance: %s ", timestamp, face.getId(), face.appearance));
+            //Log.i(TAG, String.format("[%f] Face %d emotion: %s ", timestamp, face.getId(), face.emotions));
+            //Log.i(TAG, String.format("[%f] Face %d dominate emote: %s ", timestamp, face.getId(), face.emojis.getDominant()));
+            Log.i(TAG, face.emotions.getValence() + "");
 
             if (!valence.containsKey(face.getId())) {
                 valence.put(face.getId(), new ArrayList<Float>());

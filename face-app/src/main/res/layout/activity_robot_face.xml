@@ -12,4 +12,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
 
+    <SurfaceView
+        android:id="@+id/camera_preview_view"
+        android:layout_width="1px"
+        android:layout_height="1px"
+        android:alpha="0"
+        android:layout_gravity="bottom|end" />
+
 </FrameLayout>

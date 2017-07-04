@@ -10,14 +10,24 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.VideoView;
 
+import com.affectiva.android.affdex.sdk.detector.CameraDetector;
+import com.affectiva.android.affdex.sdk.detector.CameraDetector.CameraType;
+import com.affectiva.android.affdex.sdk.detector.Detector.FaceDetectorMode;
 import com.simthesocialrobot.app.Message;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothConnectThread;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothConnectionHandler;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothIncomingMessageThread;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothIncomingMessageHandler;
+
+import com.simthesocialrobot.app.android.EmotionListener;
+import com.simthesocialrobot.app.android.FaceListener;
+import com.simthesocialrobot.app.android.bluetooth.BluetoothOutgoingMessageHandler;
+import com.simthesocialrobot.app.android.bluetooth.BluetoothOutgoingMessageSender;
+import com.simthesocialrobot.app.android.bluetooth.BluetoothOutgoingMessageThread;
 
 import java.util.Random;
 
@@ -39,10 +49,18 @@ public class RobotFaceActivity extends Activity {
     BluetoothAdapter btAdapter;
     BluetoothConnectThread btConnectThread;
     BluetoothIncomingMessageThread btIncomingMessageThread;
+    // If a bluetooth connection is established, this will be the outgoing thread
+    BluetoothOutgoingMessageSender btMessageSender;
+
+    CameraDetector detector;
+    SurfaceView cameraView;
+
+    final int CAMERA_FPS = 5;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_robot_face);
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -97,12 +115,30 @@ public class RobotFaceActivity extends Activity {
         });
         btConnectThread.start();
 
+        btMessageSender = new BluetoothOutgoingMessageSender() {
+            @Override
+            public void sendMessage(Message message) {
+                Log.i("DefaultBTMessageSender", message.getMessageString());
+                playVideo(message);
+            }
+        };
+
+        cameraView = (SurfaceView) findViewById(R.id.camera_preview_view);
+        detector = new CameraDetector(this, CameraType.CAMERA_FRONT, cameraView, 1, FaceDetectorMode.SMALL_FACES);
+        detector.setMaxProcessRate(CAMERA_FPS);
+        detector.setFaceListener(new FaceListener(detector));
+        detector.setImageListener(new EmotionListener(detector, btMessageSender));
+        detector.setDetectAllAppearances(true);
+        detector.setDetectAllEmojis(false);
+        detector.setDetectAllEmotions(true);
+        detector.setDetectAllExpressions(false);
+        detector.start();
+
         Intent intent = getIntent();
         robotType = RobotType.valueOf(intent.getStringExtra(MainActivity.ROBOT_TYPE));
         robotMode = RobotMode.IDLE;
         numIdleExpressions = getNumIdleExpressions();
 
-        setContentView(R.layout.activity_robot_face);
         videoView = (VideoView) findViewById(R.id.video_view);
 
         // Hide System UI by default
@@ -160,6 +196,14 @@ public class RobotFaceActivity extends Activity {
         });
     }
 
+    @Override
+    public void finish() {
+        if (detector != null && detector.isRunning()) {
+            detector.stop();
+        }
+        super.finish();
+    }
+
     private Uri getResourceUri(int id) {
         return Uri.parse("android.resource://" + getPackageName() + "/" + id);
     }
@@ -176,6 +220,33 @@ public class RobotFaceActivity extends Activity {
         }
         videoView.setVideoURI(videoToPlay);
         videoView.start();
+    }
+
+    private void playVideo(Message message) {
+        if (message.equals(Message.HAPPY)) {
+            playVideo(getResourceUri(R.raw.happy_s02));
+        }
+        else if (message.equals(Message.IDLE)) {
+            playVideo(chooseRandomIdleExpression());
+        }
+        else if (message.equals(Message.LITTLE_HAPPY)) {
+            playVideo(getResourceUri(R.raw.happy_s01));
+        }
+        else if (message.equals(Message.LITTLE_SAD)) {
+            playVideo(getResourceUri(R.raw.sad_s01));
+        }
+        else if (message.equals(Message.LITTLE_HAPPY)) {
+            playVideo(getResourceUri(R.raw.happy_s01));
+        }
+        else if (message.equals(Message.SAD)) {
+            playVideo(getResourceUri(R.raw.sad_s02));
+        }
+        else if (message.equals(Message.SLEEP)) {
+            playVideo(getResourceUri(R.raw.sleep_s01));
+        }
+        else if (message.equals(Message.SWITCH)) {
+            playVideo(getResourceUri(R.raw.switch_software));
+        }
     }
 
     private int getNumIdleExpressions() {
