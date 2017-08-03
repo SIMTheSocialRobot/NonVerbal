@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 22
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "edu.uw.hcde.capstone.nonverbal"
         minSdkVersion 19
@@ -27,9 +27,12 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
+
     compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.android.support:support-v4:22.1.1'
     compile 'com.android.support:design:22.2.0'
-    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+
     compile 'com.affectiva.android:affdexsdk:3.2'
+    compile 'org.slf4j:slf4j-android:1.7.25'
+
 }

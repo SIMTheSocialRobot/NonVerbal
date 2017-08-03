@@ -19,7 +19,7 @@ public class BluetoothOutgoingMessageThread extends Thread implements BluetoothO
 
     private final BluetoothSocket socket;
     private final BluetoothOutgoingMessageHandler messageHandler;
-    private final OutputStream outputStream;
+    private OutputStream outputStream;
     private byte[] outputBuffer;
     private String outgoingMessage;
 
@@ -43,6 +43,9 @@ public class BluetoothOutgoingMessageThread extends Thread implements BluetoothO
     public void sendMessage(Message message) {
         Log.i(TAG, String.format("Sending message: %s", message.getMessageString()));
         outgoingMessage = message.getMessageString();
+        if (outputStream == null) {
+            messageHandler.onOutputStreamDisconnected();
+        }
     }
 
     public void run() {
@@ -53,14 +56,16 @@ public class BluetoothOutgoingMessageThread extends Thread implements BluetoothO
                 if (outgoingMessage != null && !outgoingMessage.isEmpty()) {
                     numBytes = outgoingMessage.getBytes(Charset.forName("ascii")).length;
                     outputBuffer = outgoingMessage.getBytes(Charset.forName("ascii"));
-                    outgoingMessage = null;
 
                     outputStream.write(outputBuffer);
-                    Log.d(TAG, String.format("Sent message: %s", new String(outputBuffer).substring(0, numBytes)));
+                    messageHandler.onMessageSent(Message.parse(outgoingMessage));
+                    Log.d(TAG, String.format("Sent message: %s", outgoingMessage));
+                    outgoingMessage = null;
                 }
             }
             catch (IOException e) {
                 Log.e(TAG, "Output stream was disconnected", e);
+                outputStream = null;
                 messageHandler.onOutputStreamDisconnected();
                 break;
             }

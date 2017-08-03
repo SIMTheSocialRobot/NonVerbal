@@ -39,10 +39,10 @@
                 android:onClick="changeRobotMode" />
 
             <RadioButton
-                android:text="Dumbot"
+                android:text="Mirror"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/robot_mode_dumb"
+                android:id="@+id/robot_mode_mirror"
                 android:checked="false"
                 android:onClick="changeRobotMode"/>
 

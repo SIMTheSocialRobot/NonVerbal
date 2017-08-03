@@ -13,12 +13,6 @@ public class FaceListener implements Detector.FaceListener {
 
     private final String TAG = FaceListener.class.getSimpleName();
 
-    CameraDetector detector;
-
-    public FaceListener(CameraDetector detector) {
-        this.detector = detector;
-    }
-
     @Override
     public void onFaceDetectionStarted() {
         Log.d(TAG, "onFaceDetectionStarted");

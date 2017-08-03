@@ -1,22 +1,35 @@
-<FrameLayout
+<GridLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
+    android:rowCount="2"
+    android:columnCount="2"
     tools:context="edu.uw.hcde.capstone.nonverbal.RobotFaceActivity">
 
     <VideoView
         android:id="@+id/video_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_gravity="top|left" />
 
-    <SurfaceView
-        android:id="@+id/camera_preview_view"
-        android:layout_width="1px"
-        android:layout_height="1px"
-        android:alpha="0"
-        android:layout_gravity="bottom|end" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <SurfaceView
+            android:id="@+id/camera_preview_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end" />
+
+        <com.simthesocialrobot.app.android.FacePointsView
+            android:id="@+id/preview_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
 </FrameLayout>
+
+</GridLayout>
+

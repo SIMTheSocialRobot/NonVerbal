@@ -1,11 +1,12 @@
 package com.simthesocialrobot.app.android;
 
+import android.graphics.PointF;
 import android.util.Log;
 
 import com.affectiva.android.affdex.sdk.Frame;
-import com.affectiva.android.affdex.sdk.detector.CameraDetector;
 import com.affectiva.android.affdex.sdk.detector.Detector;
 import com.affectiva.android.affdex.sdk.detector.Face;
+import com.simthesocialrobot.app.Affdex;
 import com.simthesocialrobot.app.Message;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothOutgoingMessageSender;
 
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import edu.uw.hcde.capstone.nonverbal.RobotFaceActivity;
 
 /**
  * Created by jluetke on 7/2/17.
@@ -24,13 +27,15 @@ public class EmotionListener implements Detector.ImageListener {
 
     private final String TAG = EmotionListener.class.getSimpleName();
 
+    private final int TOLERANCE = 96;
+
     BluetoothOutgoingMessageSender btSender;
-    CameraDetector detector;
+    RobotFaceActivity activity;
     Map<Integer, List<Float>> valence = new HashMap<>();
 
-    public EmotionListener(CameraDetector detector, BluetoothOutgoingMessageSender btSender) {
-        this.detector = detector;
+    public EmotionListener(RobotFaceActivity activity, BluetoothOutgoingMessageSender btSender) {
         this.btSender = btSender;
+        this.activity = activity;
     }
 
     @Override
@@ -45,6 +50,41 @@ public class EmotionListener implements Detector.ImageListener {
         // TODO: Track different faces?
         // Force the first face for now
         Face face = faces.get(0);
+
+        // Face tracking
+        PointF[] facePoints = face.getFacePoints();
+        PointF trackingPoint = facePoints[Affdex.FacePoints.NOSE_ROOT];
+        int goalX = image.getWidth() / 2;
+        int goalY = image.getHeight() / 2;
+
+        activity.setFacePoints(facePoints, image.getWidth(), image.getHeight());
+
+        int dx = -1 * (int) (trackingPoint.x - goalX);
+        int dy = (int) (trackingPoint.y - goalY);
+
+        Log.i(TAG, String.format("trackingPoint.y: %.2f", trackingPoint.y));
+        Log.i(TAG, String.format("goalY: %d", goalY));
+
+        // halved because of -/+
+        if (Math.abs(dy) <= TOLERANCE / 2) {
+            dy = 0;
+            Log.i(TAG, "dy is within tolerance range");
+        }
+
+        Log.i(TAG, String.format("dy: %d", dy));
+
+//        int tx = (int) (image.getWidth() - trackingPoint.x);
+//        int ty = (int) (trackingPoint.y - image.getHeight());
+//        int tx = (int) Math.abs(image.getWidth() - trackingPoint.x);
+//        int ty = (int) Math.abs(trackingPoint.y - image.getHeight());
+        int tx = (int) Math.abs(image.getWidth() - trackingPoint.x);
+        int ty = (int) Math.abs(image.getHeight() - trackingPoint.y);
+
+
+
+
+        btSender.sendMessage(Message.createLookMessage(dx, dy, image.getWidth(), image.getHeight()));
+
 
         //for (Face face : faces) {
             //Log.i(TAG, String.format("[%f] Face %d appearance: %s ", timestamp, face.getId(), face.appearance));

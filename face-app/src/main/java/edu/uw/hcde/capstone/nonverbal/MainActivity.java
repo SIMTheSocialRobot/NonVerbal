@@ -80,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
                 if (checked)
                     robotType = RobotType.SIM;
                     break;
-            case R.id.robot_mode_dumb:
+            case R.id.robot_mode_mirror:
                 if (checked)
-                    robotType = RobotType.DUMBOT;
+                    robotType = RobotType.MIRROR;
                     break;
             default:
                 robotType = RobotType.SIM;
@@ -109,13 +109,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void disableControls() {
         ((RadioButton) findViewById(R.id.robot_mode_sim)).setEnabled(false);
-        ((RadioButton) findViewById(R.id.robot_mode_dumb)).setEnabled(false);
+        ((RadioButton) findViewById(R.id.robot_mode_mirror)).setEnabled(false);
         ((Button) findViewById(R.id.button)).setEnabled(false);
     }
 
     private void enableControls() {
         ((RadioButton) findViewById(R.id.robot_mode_sim)).setEnabled(true);
-        ((RadioButton) findViewById(R.id.robot_mode_dumb)).setEnabled(true);
+        ((RadioButton) findViewById(R.id.robot_mode_mirror)).setEnabled(true);
         ((Button) findViewById(R.id.button)).setEnabled(true);
     }
 

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.PointF;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,13 +16,11 @@ import android.view.View;
 import android.widget.VideoView;
 
 import com.affectiva.android.affdex.sdk.detector.CameraDetector;
-import com.affectiva.android.affdex.sdk.detector.CameraDetector.CameraType;
-import com.affectiva.android.affdex.sdk.detector.Detector.FaceDetectorMode;
 import com.simthesocialrobot.app.Message;
+import com.simthesocialrobot.app.android.CameraRunnable;
+import com.simthesocialrobot.app.android.FacePointsView;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothConnectThread;
 import com.simthesocialrobot.app.android.bluetooth.BluetoothConnectionHandler;
-import com.simthesocialrobot.app.android.bluetooth.BluetoothIncomingMessageThread;
-import com.simthesocialrobot.app.android.bluetooth.BluetoothIncomingMessageHandler;
 
 import com.simthesocialrobot.app.android.EmotionListener;
 import com.simthesocialrobot.app.android.FaceListener;
@@ -38,6 +37,7 @@ import java.util.Random;
 public class RobotFaceActivity extends Activity {
 
     VideoView videoView;
+
     Uri nextVideoUri;
     TypedArray videos;
     RobotType robotType;
@@ -48,21 +48,31 @@ public class RobotFaceActivity extends Activity {
 
     BluetoothAdapter btAdapter;
     BluetoothConnectThread btConnectThread;
-    BluetoothIncomingMessageThread btIncomingMessageThread;
+    BluetoothOutgoingMessageThread btOutgoingMessageThread;
     // If a bluetooth connection is established, this will be the outgoing thread
     BluetoothOutgoingMessageSender btMessageSender;
 
     CameraDetector detector;
     SurfaceView cameraView;
+    FacePointsView previewDrawer;
 
     final int CAMERA_FPS = 5;
+    RobotFaceActivity activity = null;
+
+    private CameraRunnable cameraRunnable;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        activity = this;
         setContentView(R.layout.activity_robot_face);
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();
+        cameraView = (SurfaceView) findViewById(R.id.camera_preview_view);
+        previewDrawer = (FacePointsView) findViewById(R.id.preview_overlay);
+
+        cameraRunnable = new CameraRunnable(this.getApplicationContext(), cameraView);
+        cameraRunnable.setFaceListener(new FaceListener());
 
         btConnectThread = new BluetoothConnectThread(btAdapter, new BluetoothConnectionHandler() {
             @Override
@@ -74,42 +84,23 @@ public class RobotFaceActivity extends Activity {
                 else {
                     nextVideoUri = getResourceUri(R.raw.happy_s01);
 
-                    btIncomingMessageThread = new BluetoothIncomingMessageThread(socket, new BluetoothIncomingMessageHandler() {
+                    btOutgoingMessageThread = new BluetoothOutgoingMessageThread(socket, new BluetoothOutgoingMessageHandler() {
                         @Override
-                        public void onInputStreamDisconnected() {
-                            finish();
+                        public void onMessageSent(Message message) {
+                            playVideo(message);
                         }
 
                         @Override
-                        public void onMessageRecieved(Message message) {
-                            if (message == null) {
-                                return;
-                            }
-
-                            if (message.equals(Message.SLEEP)) {
-                                robotMode = RobotMode.SLEEP;
-                            }
-                            else {
-                                robotMode = RobotMode.IDLE;
-                            }
-
-                            if (message.equals(Message.SWITCH)) {
-                                robotType = robotType == RobotType.DUMBOT ? RobotType.SIM : RobotType.DUMBOT;
-                                videos = loadVideos();
-                                numIdleExpressions = getNumIdleExpressions();
-                            }
-
-                            for (int i = 0; i < videos.length(); i++) {
-                                String item = videos.getString(i);
-                                if (item.toLowerCase().contains(message.getMessageString().toLowerCase())) {
-                                    nextVideoUri = getResourceUri(videos.getResourceId(i, 0));
-                                    break;
-                                }
-                            }
+                        public void onOutputStreamDisconnected() {
+                            finish();
                         }
                     });
 
-                    btIncomingMessageThread.start();
+                    btMessageSender = btOutgoingMessageThread;
+
+                    btOutgoingMessageThread.start();
+
+                    cameraRunnable.setImageListener(new EmotionListener(activity, btOutgoingMessageThread));
                 }
             }
         });
@@ -123,23 +114,22 @@ public class RobotFaceActivity extends Activity {
             }
         };
 
-        cameraView = (SurfaceView) findViewById(R.id.camera_preview_view);
-        detector = new CameraDetector(this, CameraType.CAMERA_FRONT, cameraView, 1, FaceDetectorMode.SMALL_FACES);
-        detector.setMaxProcessRate(CAMERA_FPS);
-        detector.setFaceListener(new FaceListener(detector));
-        detector.setImageListener(new EmotionListener(detector, btMessageSender));
-        detector.setDetectAllAppearances(true);
-        detector.setDetectAllEmojis(false);
-        detector.setDetectAllEmotions(true);
-        detector.setDetectAllExpressions(false);
-        detector.start();
-
         Intent intent = getIntent();
         robotType = RobotType.valueOf(intent.getStringExtra(MainActivity.ROBOT_TYPE));
         robotMode = RobotMode.IDLE;
+        //debugView = intent.getBooleanExtra(MainActivity.DEBUG_VIEW, false);
         numIdleExpressions = getNumIdleExpressions();
 
         videoView = (VideoView) findViewById(R.id.video_view);
+
+        if (robotType == RobotType.SIM) {
+            videoView.setVisibility(View.VISIBLE);
+            cameraView.setVisibility(View.VISIBLE);
+        }
+        else if (robotType == RobotType.MIRROR) {
+            videoView.setVisibility(View.GONE);
+            cameraView.setVisibility(View.VISIBLE);
+        }
 
         // Hide System UI by default
         videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
@@ -182,25 +172,40 @@ public class RobotFaceActivity extends Activity {
                     playVideo(nextVideoUri);
                     nextVideoUri = null;
                 }
-
             }
         });
 
         videoView.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
-                if (videoView.equals(v) && (videoView.getSystemUiVisibility() & VideoView.SYSTEM_UI_FLAG_HIDE_NAVIGATION) != View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) {
-                    videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-                }
-                return true;
+            if (videoView.equals(v) && (videoView.getSystemUiVisibility() & VideoView.SYSTEM_UI_FLAG_HIDE_NAVIGATION) != View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) {
+                videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            }
+            return true;
             }
         });
+
+        Thread cameraThread = new Thread(cameraRunnable, "CameraDetector");
+        cameraThread.start();
+    }
+
+    public void setFacePoints(PointF[] points, int w, int h) {
+        previewDrawer.pH = h;
+        previewDrawer.pW = w;
+        previewDrawer.points = points;
+        previewDrawer.invalidate();
     }
 
     @Override
     public void finish() {
-        if (detector != null && detector.isRunning()) {
-            detector.stop();
-        }
+        if (cameraRunnable != null)
+            cameraRunnable.stop();
+
+        if (btOutgoingMessageThread != null)
+            btOutgoingMessageThread.interrupt();
+
+        if (btConnectThread != null)
+            btConnectThread.interrupt();
+
         super.finish();
     }
 
@@ -224,40 +229,40 @@ public class RobotFaceActivity extends Activity {
 
     private void playVideo(Message message) {
         if (message.equals(Message.HAPPY)) {
-            playVideo(getResourceUri(R.raw.happy_s02));
+            nextVideoUri = (getResourceUri(R.raw.happy_s02));
         }
         else if (message.equals(Message.IDLE)) {
-            playVideo(chooseRandomIdleExpression());
+            nextVideoUri = (chooseRandomIdleExpression());
         }
         else if (message.equals(Message.LITTLE_HAPPY)) {
-            playVideo(getResourceUri(R.raw.happy_s01));
+            nextVideoUri = (getResourceUri(R.raw.happy_s01));
         }
         else if (message.equals(Message.LITTLE_SAD)) {
-            playVideo(getResourceUri(R.raw.sad_s01));
+            nextVideoUri = (getResourceUri(R.raw.sad_s01));
         }
         else if (message.equals(Message.LITTLE_HAPPY)) {
-            playVideo(getResourceUri(R.raw.happy_s01));
+            nextVideoUri = (getResourceUri(R.raw.happy_s01));
         }
         else if (message.equals(Message.SAD)) {
-            playVideo(getResourceUri(R.raw.sad_s02));
+            nextVideoUri = (getResourceUri(R.raw.sad_s02));
         }
         else if (message.equals(Message.SLEEP)) {
-            playVideo(getResourceUri(R.raw.sleep_s01));
+            nextVideoUri = (getResourceUri(R.raw.sleep_s01));
         }
         else if (message.equals(Message.SWITCH)) {
-            playVideo(getResourceUri(R.raw.switch_software));
+            nextVideoUri = (getResourceUri(R.raw.switch_software));
         }
     }
 
     private int getNumIdleExpressions() {
-        return robotType == RobotType.DUMBOT ?
-            getResources().getIntArray(R.array.numIdleExpressions)[0] :
+        return //robotType == RobotType.MIRROR ?
+            //getResources().getIntArray(R.array.numIdleExpressions)[0] :
             getResources().getIntArray(R.array.numIdleExpressions)[1];
     }
 
     private TypedArray loadVideos() {
-        return robotType == RobotType.DUMBOT ?
-            getResources().obtainTypedArray(R.array.dumbotVideos) :
+        return //robotType == RobotType.MIRROR ?
+            //getResources().obtainTypedArray(R.array.dumbotVideos) :
             getResources().obtainTypedArray(R.array.simVideos);
     }
 }
